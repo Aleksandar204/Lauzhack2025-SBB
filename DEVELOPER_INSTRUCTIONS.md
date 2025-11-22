@@ -37,21 +37,6 @@ Option B — run Uvicorn directly:
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**4. Test the server**
-Open another terminal (or use the integrated terminal) and run these quick checks:
-
-- Ping the server:
-```bash
-curl -s http://127.0.0.1:8000/ping
-# Expected output: {"msg":"pong"}
-```
-
-- Generate a card (creates and returns a UUID string):
-```bash
-curl -s http://127.0.0.1:8000/generate_card
-# Expected output: {"id":"<some-uuid>"}
-```
-
 Codespace forwarded URL (shared)
 ---------------------------------
 Novak runuje ovo. ako novak ne zaustavi namerno app da bi uradio update, server se nece sam ugasiti. url ostaje isti cak iako ugasim app pa runujem ponovo.
