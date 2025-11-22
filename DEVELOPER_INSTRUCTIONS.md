@@ -52,6 +52,22 @@ curl -s http://127.0.0.1:8000/generate_card
 # Expected output: {"id":"<some-uuid>"}
 ```
 
+Codespace forwarded URL (shared)
+---------------------------------
+Novak runuje ovo. ako novak ne zaustavi namerno app da bi uradio update, server se nece sam ugasiti. url ostaje isti cak iako ugasim app pa runujem ponovo.
+
+If the running Codespace has forwarded port 8000 and the owner made it public, you can use the shared preview URL directly without running anything locally. Example (this Codespace URL was shared by the project owner):
+
+```bash
+curl -s "https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/ping"
+# Expected output: {"msg":"pong"}
+
+curl -s "https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/generate_card"
+# Expected output: {"id":"<some-uuid>"}
+```
+
+Note: the preview URL will stay accessible according to the Codespace's port visibility settings. If the owner later makes the port private, or another codespace is started and used for the backend, you will need them to re-share it, or run the app locally.
+
 **5. Stop the server**
 If you started `python app.py` or `uvicorn ...` in the foreground, press `Ctrl+C` in that terminal to stop it.
 
