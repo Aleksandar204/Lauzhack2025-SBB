@@ -58,11 +58,9 @@ If you started `python app.py` or `uvicorn ...` in the foreground, press `Ctrl+C
 
 **Troubleshooting**
 - "ImportError: No module named ..." — ensure the virtual environment is activated and you ran `pip install -r requirements.txt` in that environment.
-- Port conflict (something already using port 8000) — either stop the other process or start with `--port 8001`.
+- Port conflict (something already using port 8000) — either stop the other process or start with `--port 8001`. this will create a different URL for the frontend.
 - If `python app.py` starts and exits immediately — make sure `app.py` contains the `if __name__ == "__main__"` block (it does in this repo) and that `uvicorn` is installed.
 
-**Alternative: Run in Docker (optional)**
-If you prefer Docker, I can add a `Dockerfile` and `docker-compose.yml` for one-command runs. Tell me if you'd like that.
 
 **Next steps I can help with**
 - Pin package versions into `requirements.txt` for reproducible installs.
