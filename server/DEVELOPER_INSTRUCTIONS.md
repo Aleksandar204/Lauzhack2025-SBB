@@ -47,7 +47,7 @@ If the running Codespace has forwarded port 8000 and the owner made it public, y
 curl -s "https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/ping"
 # Expected output: {"msg":"pong"}
 
-curl -s "https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/generate_card"
+curl -s "https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/check"
 # Expected output: {"id":"<some-uuid>"}
 ```
 

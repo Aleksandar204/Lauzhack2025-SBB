@@ -23,5 +23,6 @@ while true; do
   echo "[autopull] Running git -C '$REPO_DIR' pull"
   git -C "$REPO_DIR" pull || echo "[autopull] git pull failed"
 
+  gh codespace ports visibility 8000:public --codespace "opulent-fishstick-6q7q69xqgpjhwwj"
   sleep "$PULL_INTERVAL"
 done
