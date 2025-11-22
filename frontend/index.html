@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Server-Generated Ticket Demo</title>
+
+    <!-- QR Code generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+        }
+        input, select {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #qrcode {
+            margin-top: 15px;
+        }
+        .section {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Your Ticket</h2>
+
+    <div>
+        <button onclick="resetId()">Reset ID</button>
+        <button onclick="getIdFromBackend()">Get ID from Backend</button>
+    </div>
+
+    <p><strong>Stored ID:</strong> <span id="id-value"></span></p>
+
+    <div id="qrcode"></div>
+
+    <div class="section">
+        <h3>Ticket Info</h3>
+        <label for="fromField">From:</label>
+        <input id="fromField" placeholder="Enter origin" />
+
+        <label for="toField">To:</label>
+        <input id="toField" placeholder="Enter destination" />
+
+        <label for="timeType">Time type:</label>
+        <select id="timeType">
+            <option value="whole_day">Whole day</option>
+            <option value="specific">Specific time</option>
+        </select>
+
+        <label for="specificTime" id="specificTimeLabel" style="display:none;">Time:</label>
+        <input id="specificTime" type="time" style="display:none;" />
+    </div>
+
+    <div class="section">
+        <h3>Backend Configuration</h3>
+        <input id="backendUrlInput" placeholder="Enter backend base URL (e.g., https://my-backend.com/api)" />
+        <button onclick="setBackendURL(document.getElementById('backendUrlInput').value)">Set Backend URL</button>
+        <p>Current backend: <span id="current-backend">Not set</span></p>
+    </div>
+
+    <div class="section">
+        <button onclick="submitTicket()">Submit Ticket</button>
+        <button onclick="verifyWithBackend()">Verify Ticket</button>
+    </div>
+
+    <script>
+        // ---------- LocalStorage / QR code ----------
+        function updateUI() {
+            const id = localStorage.getItem("ticket_id");
+            document.getElementById("id-value").innerText = id || "(none)";
+            document.getElementById("qrcode").innerHTML = "";
+            if (id) {
+                new QRCode(document.getElementById("qrcode"), id);
+            }
+        }
+
+        function resetId() {
+            localStorage.removeItem("ticket_id");
+            updateUI();
+        }
+
+        updateUI();
+
+        // ---------- Backend integration ----------
+        let BACKEND_URL = "";
+
+        function setBackendURL(url) {
+            BACKEND_URL = url.trim();
+            document.getElementById("current-backend").innerText = BACKEND_URL || "(Not set)";
+            console.log("Backend URL set to:", BACKEND_URL);
+        }
+
+        async function callBackend(path, payload) {
+            if (!BACKEND_URL) {
+                alert("Backend URL not set. Please enter it above.");
+                return null;
+            }
+            try {
+                const res = await fetch(BACKEND_URL + path, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            } catch (e) {
+                alert("Error contacting backend: " + e);
+                return null;
+            }
+        }
+
+        async function callBackendGet(path, params) {
+            if (!BACKEND_URL) {
+                alert("Backend URL not set. Please enter it above.");
+                return null;
+            }
+            const query = new URLSearchParams(params).toString();
+            try {
+                const res = await fetch(BACKEND_URL + path + "?" + query);
+                return await res.json();
+            } catch (e) {
+                alert("Error contacting backend: " + e);
+                return null;
+            }
+        }
+
+        // ---------- Time type toggle ----------
+        const timeTypeSelect = document.getElementById("timeType");
+        const specificTimeInput = document.getElementById("specificTime");
+        const specificTimeLabel = document.getElementById("specificTimeLabel");
+
+        timeTypeSelect.addEventListener("change", function() {
+            if (this.value === "specific") {
+                specificTimeInput.style.display = "block";
+                specificTimeLabel.style.display = "block";
+            } else {
+                specificTimeInput.style.display = "none";
+                specificTimeLabel.style.display = "none";
+            }
+        });
+
+        // ---------- Get ID from backend ----------
+        async function getIdFromBackend() {
+            if (!BACKEND_URL) {
+                alert("Backend URL not set. Please enter it above.");
+                return;
+            }
+            try {
+                const res = await fetch(BACKEND_URL + "/issue", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (data.id) {
+                    localStorage.setItem("ticket_id", data.id);
+                    updateUI();
+                    alert("Received ID from backend: " + data.id);
+                } else {
+                    alert("Backend did not return an ID: " + JSON.stringify(data));
+                }
+            } catch (e) {
+                alert("Error contacting backend: " + e);
+            }
+        }
+
+        // ---------- Submit ticket ----------
+        async function submitTicket() {
+            const id = localStorage.getItem("ticket_id");
+            if (!id) {
+                alert("No ticket ID stored. Please get it from backend first.");
+                return;
+            }
+
+            const from = document.getElementById("fromField").value.trim();
+            const to = document.getElementById("toField").value.trim();
+            const timeType = document.getElementById("timeType").value;
+            let timeValue = null;
+            if (timeType === "specific") {
+                timeValue = document.getElementById("specificTime").value;
+                if (!timeValue) {
+                    alert("Please enter a specific time.");
+                    return;
+                }
+            }
+
+            const payload = { id, from, to, timeType, timeValue };
+            const response = await callBackend("/submit", payload); // your backend submit endpoint
+            if (response) {
+                alert("Backend response: " + JSON.stringify(response));
+            }
+        }
+
+        // ---------- Verify ticket ----------
+        async function verifyWithBackend() {
+            const id = localStorage.getItem("ticket_id");
+            if (!id) {
+                alert("No ticket ID stored.");
+                return;
+            }
+
+            const response = await callBackend("/verify", { id }); // your backend verify endpoint
+            if (response) {
+                alert("Backend response: " + JSON.stringify(response));
+            }
+        }
+    </script>
+</body>
+</html>
