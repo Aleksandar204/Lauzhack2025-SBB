@@ -1,10 +1,10 @@
 {
   "SUS": {
-    "counter": 3,
+    "counter": 1,
     "secret_key": "AMONGUS"
   },
   "AAA": {
-    "counter": 2,
+    "counter": 1,
     "secret_key": "BBBBBB"
   }
 }
