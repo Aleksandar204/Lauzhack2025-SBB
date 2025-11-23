@@ -1,224 +1,165 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
-    <title>Server-Generated Ticket Demo</title>
-
-    <!-- QR Code generator -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-        }
-        button {
-            margin: 5px;
-            padding: 10px 20px;
-        }
-        input, select {
-            margin: 5px 0;
-            padding: 5px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #qrcode {
-            margin-top: 15px;
-        }
-        .section {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-        }
-    </style>
+<meta charset="UTF-8" />
+<title>Ticket System v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+body { font-family: Arial, sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+button { margin: 5px; padding: 10px 20px; }
+input, select { margin: 5px 0; padding: 5px; width: 100%; box-sizing: border-box; }
+#qrcode { margin-top: 15px; }
+.section { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; }
+</style>
 </head>
-
 <body>
-    <h2>Your Ticket</h2>
 
-    <div>
-        <button onclick="resetId()">Reset ID</button>
-        <button onclick="getIdFromBackend()">Get ID from Backend</button>
-    </div>
+<h2>Your Ticket</h2>
 
-    <p><strong>Stored ID:</strong> <span id="id-value"></span></p>
+<div>
+    <button onclick="resetId()">Reset ID</button>
+    <button onclick="getIdFromBackend()">Get New ID from Backend</button>
+</div>
 
-    <div id="qrcode"></div>
+<p><strong>Stored ID:</strong> <span id="id-value"></span></p>
+<div id="qrcode"></div>
 
-    <div class="section">
-        <h3>Ticket Info</h3>
-        <label for="fromField">From:</label>
-        <input id="fromField" placeholder="Enter origin" />
+<div class="section">
+<h3>Ticket Info</h3>
 
-        <label for="toField">To:</label>
-        <input id="toField" placeholder="Enter destination" />
+<label for="originField">Origin:</label>
+<input id="originField" placeholder="Enter origin" />
 
-        <label for="timeType">Time type:</label>
-        <select id="timeType">
-            <option value="whole_day">Whole day</option>
-            <option value="specific">Specific time</option>
-        </select>
+<label for="destinationField">Destination:</label>
+<input id="destinationField" placeholder="Enter destination" />
 
-        <label for="specificTime" id="specificTimeLabel" style="display:none;">Time:</label>
-        <input id="specificTime" type="time" style="display:none;" />
-    </div>
+<label for="typeField">Type:</label>
+<select id="typeField">
+    <option value="all_day">Whole day</option>
+    <option value="timed">Timed</option>
+</select>
 
-    <div class="section">
-        <h3>Backend Configuration</h3>
-        <input id="backendUrlInput" placeholder="Enter backend base URL (e.g., https://my-backend.com/api)" />
-        <button onclick="setBackendURL(document.getElementById('backendUrlInput').value)">Set Backend URL</button>
-        <p>Current backend: <span id="current-backend">Not set</span></p>
-    </div>
+<label for="specificTime" id="specificTimeLabel" style="display:none;">Specific Time:</label>
+<input id="specificTime" type="time" style="display:none;" />
+</div>
 
-    <div class="section">
-        <button onclick="submitTicket()">Submit Ticket</button>
-        <button onclick="verifyWithBackend()">Verify Ticket</button>
-    </div>
+<div class="section">
+<h3>Backend Configuration</h3>
+<input id="backendUrlInput" placeholder="Enter backend base URL (e.g., https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev)" />
+<button onclick="setBackendURL(document.getElementById('backendUrlInput').value)">Set Backend URL</button>
+<p>Current backend: <span id="current-backend">Not set</span></p>
+</div>
 
-    <script>
-        // ---------- LocalStorage / QR code ----------
-        function updateUI() {
-            const id = localStorage.getItem("ticket_id");
-            document.getElementById("id-value").innerText = id || "(none)";
-            document.getElementById("qrcode").innerHTML = "";
-            if (id) {
-                new QRCode(document.getElementById("qrcode"), id);
-            }
-        }
+<div class="section">
+<button onclick="submitTicket()">Submit Ticket</button>
+<button onclick="verifyWithBackend()">Verify Ticket</button>
+</div>
 
-        function resetId() {
-            localStorage.removeItem("ticket_id");
+<script>
+let BACKEND_URL = "";
+
+function updateUI() {
+    const id = localStorage.getItem("ticket_id");
+    document.getElementById("id-value").innerText = id || "(none)";
+    document.getElementById("qrcode").innerHTML = "";
+    if (id) new QRCode(document.getElementById("qrcode"), id);
+}
+
+function resetId() {
+    localStorage.removeItem("ticket_id");
+    updateUI();
+}
+
+updateUI();
+
+function setBackendURL(url) {
+    BACKEND_URL = url.trim().replace(/\/+$/, "");
+    document.getElementById("current-backend").innerText = BACKEND_URL || "(Not set)";
+}
+
+function buildUrlWithParams(path, params) {
+    const query = new URLSearchParams(params).toString();
+    return `${BACKEND_URL}/${path}?${query}`;
+}
+
+const typeSelect = document.getElementById("typeField");
+const specificTimeInput = document.getElementById("specificTime");
+const specificTimeLabel = document.getElementById("specificTimeLabel");
+typeSelect.addEventListener("change", () => {
+    const show = typeSelect.value === "timed";
+    specificTimeInput.style.display = show ? "block" : "none";
+    specificTimeLabel.style.display = show ? "block" : "none";
+});
+
+async function getIdFromBackend() {
+    if (!BACKEND_URL) { alert("Backend URL not set."); return; }
+
+    const params = { origin: "_", destination: "_", trip_type: "_", timestamp: Date.now().toString() };
+    const url = buildUrlWithParams("generate_trip", params);
+
+    try {
+        //const res = await fetch(url);
+
+        const res = await fetch(url, { method: "POST" });  
+
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+        if (data.id) {
+            localStorage.setItem("ticket_id", data.id);
             updateUI();
-        }
+            alert("New ID received: " + data.id);
+        } else alert("Backend did not return an ID.");
+    } catch (e) {
+        console.error(e);
+        alert("Error contacting backend: " + e.message);
+    }
+}
 
-        updateUI();
+async function submitTicket() {
+    const origin = document.getElementById("originField").value.trim();
+    const destination = document.getElementById("destinationField").value.trim();
+    const type = document.getElementById("typeField").value;
+    if (!origin || !destination) { alert("Origin and destination must be filled."); return; }
 
-        // ---------- Backend integration ----------
-        let BACKEND_URL = "";
+    const timestamp = type === "timed" ? document.getElementById("specificTime").value.trim() : Date.now().toString();
+    if (type === "timed" && !timestamp) { alert("Please select a specific time."); return; }
 
-        function setBackendURL(url) {
-            BACKEND_URL = url.trim();
-            document.getElementById("current-backend").innerText = BACKEND_URL || "(Not set)";
-            console.log("Backend URL set to:", BACKEND_URL);
-        }
+    const params = { origin, destination, trip_type: type, timestamp };
+    const url = buildUrlWithParams("generate_trip", params);
 
-        async function callBackend(path, payload) {
-            if (!BACKEND_URL) {
-                alert("Backend URL not set. Please enter it above.");
-                return null;
-            }
-            try {
-                const res = await fetch(BACKEND_URL + path, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                return await res.json();
-            } catch (e) {
-                alert("Error contacting backend: " + e);
-                return null;
-            }
-        }
+    try {
+        const res = await fetch(url, {method : "POST"} );
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+        if (data.id) {
+            localStorage.setItem("ticket_id", data.id);
+            updateUI();
+            alert("Ticket created. ID: " + data.id);
+        } else alert("Error: backend returned no ID.");
+    } catch (e) {
+        console.error(e);
+        alert("Error contacting backend: " + e.message);
+    }
+}
 
-        async function callBackendGet(path, params) {
-            if (!BACKEND_URL) {
-                alert("Backend URL not set. Please enter it above.");
-                return null;
-            }
-            const query = new URLSearchParams(params).toString();
-            try {
-                const res = await fetch(BACKEND_URL + path + "?" + query);
-                return await res.json();
-            } catch (e) {
-                alert("Error contacting backend: " + e);
-                return null;
-            }
-        }
+async function verifyWithBackend() {
+    const id = localStorage.getItem("ticket_id");
+    if (!id) { alert("No stored ticket ID."); return; }
 
-        // ---------- Time type toggle ----------
-        const timeTypeSelect = document.getElementById("timeType");
-        const specificTimeInput = document.getElementById("specificTime");
-        const specificTimeLabel = document.getElementById("specificTimeLabel");
+    const controller_id = "frontend";
+    const url = `${BACKEND_URL}/check?trip_id=${encodeURIComponent(id)}&controllor_id=${encodeURIComponent(controller_id)}`;
 
-        timeTypeSelect.addEventListener("change", function() {
-            if (this.value === "specific") {
-                specificTimeInput.style.display = "block";
-                specificTimeLabel.style.display = "block";
-            } else {
-                specificTimeInput.style.display = "none";
-                specificTimeLabel.style.display = "none";
-            }
-        });
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+        alert("Verification result: " + JSON.stringify(data));
+    } catch (e) {
+        console.error(e);
+        alert("Error contacting backend: " + e.message);
+    }
+}
+</script>
 
-        // ---------- Get ID from backend ----------
-        async function getIdFromBackend() {
-            if (!BACKEND_URL) {
-                alert("Backend URL not set. Please enter it above.");
-                return;
-            }
-            try {
-                const res = await fetch(BACKEND_URL + "/issue", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({})
-                });
-                const data = await res.json();
-                if (data.id) {
-                    localStorage.setItem("ticket_id", data.id);
-                    updateUI();
-                    alert("Received ID from backend: " + data.id);
-                } else {
-                    alert("Backend did not return an ID: " + JSON.stringify(data));
-                }
-            } catch (e) {
-                alert("Error contacting backend: " + e);
-            }
-        }
-
-        // ---------- Submit ticket ----------
-        async function submitTicket() {
-            const id = localStorage.getItem("ticket_id");
-            if (!id) {
-                alert("No ticket ID stored. Please get it from backend first.");
-                return;
-            }
-
-            const from = document.getElementById("fromField").value.trim();
-            const to = document.getElementById("toField").value.trim();
-            const timeType = document.getElementById("timeType").value;
-            let timeValue = null;
-            if (timeType === "specific") {
-                timeValue = document.getElementById("specificTime").value;
-                if (!timeValue) {
-                    alert("Please enter a specific time.");
-                    return;
-                }
-            }
-
-            const payload = { id, from, to, timeType, timeValue };
-            const response = await callBackend("/submit", payload); // your backend submit endpoint
-            if (response) {
-                alert("Backend response: " + JSON.stringify(response));
-            }
-        }
-
-        // ---------- Verify ticket ----------
-        async function verifyWithBackend() {
-            const id = localStorage.getItem("ticket_id");
-            if (!id) {
-                alert("No ticket ID stored.");
-                return;
-            }
-
-            const response = await callBackend("/verify", { id }); // your backend verify endpoint
-            if (response) {
-                alert("Backend response: " + JSON.stringify(response));
-            }
-        }
-    </script>
 </body>
 </html>
