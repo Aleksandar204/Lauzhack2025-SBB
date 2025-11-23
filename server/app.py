@@ -138,12 +138,10 @@ def validate_counter_and_mac(uid, counter, mac, challenge):
     return False
 @app.post("/validate")
 def validate_card(data: ValidationRequest):
-    # Example: validate timestamp
     import time
     now = int(time.time() * 1000)
 
 
-    # TODO: Put your MAC verification logic here
     if validate_counter_and_mac(data.uid, data.counter, data.mac, data.challenge):
         if False:#abs(now - data.timestamp) > 36000000000:
             return {
