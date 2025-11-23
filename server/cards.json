@@ -8,7 +8,7 @@
     "secret_key": "BBBBBB"
   },
   "BBB": {
-    "counter": 1,
+    "counter": 4,
     "secret_key": "TAJNA"
   }
 }
