@@ -8,4 +8,4 @@ runuj server:
 .venv/bin/python server/app.py
 ```
 
-to je sve
+to je sve. url je https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/
