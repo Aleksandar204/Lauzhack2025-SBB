@@ -7,10 +7,10 @@ import os
 app = FastAPI()
 
 # simple JSON files in the project folder
-TRIPS_FILE = "trips.json"
+CARDS_FILE = "cards.json"
 
 # in-memory dict: key = trip_id, value = origin, dest, timestamp, type
-trips = {}
+cards = {}
 # key je trip_id
 # value je origin, dest, timestamp, type
 #setuje se tako sto dobijemo VALUE i izmislimo KEY
@@ -52,7 +52,7 @@ def _load(path: str, store: dict):
                 #     store.update(converted)
         except Exception:
             # keep it simple for demo: ignore malformed file
-            print("Failed to load trips file")
+            print("Failed to load cards file")
 
 
 def _save(path: str, store: dict):
@@ -65,8 +65,53 @@ def _save(path: str, store: dict):
         pass
 
 
+'''
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class ValidationRequest(BaseModel):
+    uid: str
+    counter: int
+    mac: str
+    challenge: str
+    timestamp: int
+
+    
+def validate_counter_and_mac(uid, counter, mac, challenge):
+    # Placeholder for actual MAC verification logic
+    cards
+    return True
+@app.post("/validate")
+def validate_card(data: ValidationRequest):
+    # Example: validate timestamp
+    import time
+    now = int(time.time() * 1000)
+
+
+    # TODO: Put your MAC verification logic here
+    if validate_counter_and_mac(data.uid, data.counter, data.mac, data.challenge):
+        if abs(now - data.timestamp) > 36000000000:
+            return {
+                "success": False,
+                "message": "Timestamp is too old"
+            }
+        return {
+            "success": True,
+            "message": "Card validated successfully"
+        }
+    else:
+        return {
+            "success": False,
+            "message": "MAC verification failed"
+        } 
+
+'''
+
+
 # load persisted data on startup (if present)
-_load(TRIPS_FILE, trips)
+_load(CARDS_FILE, cards)
 @app.get("/ping")
 def ping():
     return {"msg": "pong"}
@@ -77,8 +122,8 @@ def check_trip(trip_id: str, controllor_id: str):
 
 
     #not yet implemented: checking copied cards which are scanned by the same controllor_id
-    if trip_id in trips:
-        return {"found": True, "details": trips[trip_id]}
+    if trip_id in cards:
+        return {"found": True, "details": cards[trip_id]}
     else:
         return {"found": False}
 
@@ -86,16 +131,16 @@ def check_trip(trip_id: str, controllor_id: str):
 @app.post('/generate_trip')
 def generate_trip(origin: str, destination: str, trip_type: str, timestamp: str):
     id_str = str(uuid.uuid4())
-    trips[id_str] = {"origin": origin, "destination": destination, "timestamp": timestamp, "type": trip_type}
-    _save(TRIPS_FILE, trips)
+    cards[id_str] = {"origin": origin, "destination": destination, "timestamp": timestamp, "type": trip_type}
+    _save(CARDS_FILE, cards)
     return {"id": id_str}
 
 
 
 
-# @app.get('/trips')
+# @app.get('/cards')
 # def list_trips():
-#     return {"trips": sorted(list(trips))}
+#     return {"cards": sorted(list(cards))}
 
 
 if __name__ == "__main__":
