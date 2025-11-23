@@ -12,6 +12,7 @@ class CardSimulator {
         // Create a few demo cards
         cards.add(SimCard(uid = "SUS", secret = "AMOGUS", counter = 1))
         cards.add(SimCard(uid = "AAA", secret = "BBBBBB", counter = 1))
+        cards.add(SimCard(uid = "BBB", secret = "TAJNA", counter = 1))
     }
 
     fun generateResponse(uid: String, challenge: String): CardResponse { // Makes the requested card respond to a challenge given by the controller
