@@ -10,8 +10,16 @@ import logging
 
 logger = logging.getLogger("uvicorn.error")
 
-app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 # simple JSON files in the project folder
 CARDS_FILE = "cards.json"
 
@@ -180,6 +188,10 @@ def check_trip(trip_id: str, controllor_id: str):
 
 @app.post('/generate_trip')
 def generate_trip(origin: str, destination: str, trip_type: str, timestamp: str):
+    print(destination)
+    if destination == "_":
+        id_str = str(uuid.uuid4())
+        return {"id": id_str}
     id_str = str(uuid.uuid4())
     cards[id_str] = {"origin": origin, "destination": destination, "timestamp": timestamp, "type": trip_type}
     _save(CARDS_FILE, cards)
