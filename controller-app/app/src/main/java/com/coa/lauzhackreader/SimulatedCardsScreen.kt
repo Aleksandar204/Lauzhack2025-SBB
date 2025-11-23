@@ -119,15 +119,14 @@ private fun sendSecureDataToServer(reqData: CardResponse): String {
           "uid": "${reqData.uid}",
           "counter": ${reqData.counter},
           "mac": "${reqData.mac}",
-          "challenge": "${reqData.challenge}",
-          "timestamp": ${System.currentTimeMillis()},
+          "challenge": "${reqData.challenge}"
         }
         """.trimIndent()
 
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url("https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/check?trip_id=abc&controllor_id=controllerId")
+            .url("https://opulent-fishstick-6q7q69xqgpjhwwj-8000.app.github.dev/validate")
             .post(body)
             .build()
 
