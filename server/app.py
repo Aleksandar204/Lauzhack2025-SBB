@@ -72,17 +72,13 @@ def _save(path: str, store: dict):
 
 
 
-from fastapi import FastAPI
 from pydantic import BaseModel
-
-app = FastAPI()
 
 class ValidationRequest(BaseModel):
     uid: str
     counter: int
     mac: str
     challenge: str
-    timestamp: int
 
 def compute_mac(secret: str, data: str) -> str:
     """Compute Base64 HMAC-SHA256 of `data` using `secret`.
@@ -149,7 +145,7 @@ def validate_card(data: ValidationRequest):
 
     # TODO: Put your MAC verification logic here
     if validate_counter_and_mac(data.uid, data.counter, data.mac, data.challenge):
-        if abs(now - data.timestamp) > 36000000000:
+        if False:#abs(now - data.timestamp) > 36000000000:
             return {
                 "success": False,
                 "message": "Timestamp is too old"

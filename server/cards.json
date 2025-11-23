@@ -1,12 +1,10 @@
 {
-    "SUS":
-    {
-        "counter": 1,
-        "secret_key": "AMOGUS"
-    },
-    "AAA":
-    {
-        "counter": 1,
-        "secret_key": "BBBBBB"
-    }
+  "SUS": {
+    "counter": 3,
+    "secret_key": "AMONGUS"
+  },
+  "AAA": {
+    "counter": 2,
+    "secret_key": "BBBBBB"
+  }
 }
