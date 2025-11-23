@@ -29,9 +29,6 @@ def _load(path: str, store: dict):
             if isinstance(data, dict):
                 store.clear()
                 store.update(data)
-                print(data)
-                print(store)
-                print("!!!")
             # If older format was a list, try to convert common list shapes
             elif isinstance(data, list):
                 pass
@@ -70,17 +67,13 @@ def _save(path: str, store: dict):
 
 # load persisted data on startup (if present)
 _load(TRIPS_FILE, trips)
-print(TRIPS_FILE)
-print(trips)
-
 @app.get("/ping")
 def ping():
     return {"msg": "pong"}
 
 @app.get('/check')
 def check_trip(trip_id: str, controllor_id: str):
-    print(trip_id)
-    print(trips)
+    
 
 
     #not yet implemented: checking copied cards which are scanned by the same controllor_id
