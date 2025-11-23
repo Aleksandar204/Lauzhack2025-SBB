@@ -6,5 +6,9 @@
   "AAA": {
     "counter": 1,
     "secret_key": "BBBBBB"
+  },
+  "BBB": {
+    "counter": 1,
+    "secret_key": "TAJNA"
   }
 }
