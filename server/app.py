@@ -3,6 +3,12 @@ import uuid
 import uvicorn
 import json
 import os
+import hmac
+import hashlib
+import base64
+import logging
+
+logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI()
 
@@ -65,7 +71,7 @@ def _save(path: str, store: dict):
         pass
 
 
-'''
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -78,11 +84,62 @@ class ValidationRequest(BaseModel):
     challenge: str
     timestamp: int
 
-    
+def compute_mac(secret: str, data: str) -> str:
+    """Compute Base64 HMAC-SHA256 of `data` using `secret`.
+
+    Returns the Base64-encoded string without line breaks (matches Android's
+    `Base64.NO_WRAP`).
+    """
+    mac = hmac.new(secret.encode("utf-8"), data.encode("utf-8"), hashlib.sha256).digest()
+    return base64.b64encode(mac).decode("utf-8")
+
+
 def validate_counter_and_mac(uid, counter, mac, challenge):
-    # Placeholder for actual MAC verification logic
-    cards
-    return True
+    # Ensure card exists
+    if uid not in cards:
+        logger.warning("Validation failed: unknown uid=%s", uid)
+        return False
+    card = cards[uid]
+
+    # Expect stored fields: "counter" (int) and "secret_key" (str)
+    try:
+        card_counter = int(card.get("counter"))
+    except Exception:
+        logger.warning("Validation failed: invalid stored counter for uid=%s", uid)
+        return False
+
+    secret = card.get("secret_key")
+    if secret is None:
+        logger.warning("Validation failed: missing secret_key for uid=%s", uid)
+        return False
+
+    # Build combined string the same way as on the card/client: uid + challenge + stateCounter
+    combined = f"{uid}{challenge}{card_counter}"
+    computed_mac = compute_mac(secret, combined)
+
+    # Verify counter matches and MAC matches (use constant-time compare)
+    mac_ok = hmac.compare_digest(computed_mac, mac)
+    try:
+        provided_counter = int(counter)
+    except Exception:
+        provided_counter = counter
+
+    if card_counter == provided_counter and mac_ok:
+        # increment stored counter and persist
+        cards[uid]["counter"] = card_counter + 1
+        _save(CARDS_FILE, cards)
+        return True
+
+    # Log specific failure reason (without exposing secrets)
+    logger.warning(
+        "Validation failed for uid=%s: stored_counter=%s, provided_counter=%s, mac_ok=%s, challenge=%s",
+        uid,
+        card_counter,
+        provided_counter,
+        mac_ok,
+        challenge,
+    )
+    return False
 @app.post("/validate")
 def validate_card(data: ValidationRequest):
     # Example: validate timestamp
@@ -107,7 +164,6 @@ def validate_card(data: ValidationRequest):
             "message": "MAC verification failed"
         } 
 
-'''
 
 
 # load persisted data on startup (if present)
